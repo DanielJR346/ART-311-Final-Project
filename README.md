@@ -1,4 +1,4 @@
-# ART-311-Final-Project
+# ART-311-Final-Project\n
 Cells will repel from the cursor
 Controls
 Spacebar: will cause all existing cells to create new cells with carying sizes and colors
