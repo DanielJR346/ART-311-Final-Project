@@ -50,25 +50,12 @@ class Cell {
     if (pos.x <= 0 || pos.x >= width) switchX();
     if (pos.y <= 0 || pos.y >= height) switchY();
     
-    // Repell cells from mouse
-    if (dist(mouseX, mouseY, pos.x, pos.y) <= 100) {
-      if (movement.x > 0 && mouseX > pos.x) {
-        movement.x  *= -1;
-        movement.x -= .2;
-      }
-      else if (movement.x < 0 && mouseX < pos.x) {
-        movement.x  *= -1;
-        movement.x += .2;
-      }
-      if (movement.y > 0 && mouseY > pos.y) {
-        movement.y  *= -1;
-        movement.y -= .2;
-      }
-      else if (movement.y < 0 && mouseY < pos.y) {
-        movement.y *= -1;
-        movement.y += .2;
-      }
-    }
+    // Repel cells from mouse
+    repel(mouseX, mouseY, 100);
+    
+    // Repel from avoidSpots
+    for(Cell i: avoidSpots) repel(i.pos.x,i.pos.y, i.size);
+    
     pos.add(movement);
     if (movement.x >= 2.5) movement.x = 2.5;
     if (movement.y >= 2.5) movement.y = 2.5;
@@ -84,10 +71,33 @@ class Cell {
     movement.y *= -1;
   }
   
+  // Repell from certain position
+  void repel(float avoidX, float avoidY, float radius) {
+    if (dist(avoidX, avoidY, pos.x, pos.y) <= radius) {
+      if (movement.x > 0 && avoidX > pos.x) {
+        movement.x  *= -1;
+        movement.x -= .2;
+      }
+      else if (movement.x < 0 && avoidX < pos.x) {
+        movement.x  *= -1;
+        movement.x += .2;
+      }
+      if (movement.y > 0 && avoidY > pos.y) {
+        movement.y  *= -1;
+        movement.y -= .2;
+      }
+      else if (movement.y < 0 && avoidY < pos.y) {
+        movement.y *= -1;
+        movement.y += .2;
+      }
+    }
+  }
 }
 
 // Arraylist that holds all cell info
 ArrayList<Cell> cells = new ArrayList<Cell>();
+// Arraylist that holds all avoid cell info
+ArrayList<Cell> avoidSpots = new ArrayList<Cell>();
 
 void setup() {
   size(1200,1000);
@@ -113,6 +123,7 @@ void draw() {
 }
 
 void keyPressed() {
+  println("keyCode == " + keyCode);
   // Spacebar pressed
   if (keyCode == 32) {
     println("spacebar pressed!");
@@ -122,4 +133,17 @@ void keyPressed() {
       cells.add(new Cell(j.pos.x, j.pos.y, random(-1,1)*j.movement.x, random(-1,1)*j.movement.y, j.size / 1.5));
     }
   }
+  
+  // R is pressed
+  // Delete all cells and reinput starting cells
+  if (keyCode == 82) {
+    cells.clear();
+    for (int i = 0; i < 4; i++) cells.add(new Cell(random(0, width), random(0,height), random(-1,1), random(-1,1), random(20,30)));
+  }
+}
+
+void mouseClicked() {
+  // Add avoidSpot at mouse position
+  avoidSpots.add(new Cell(mouseX,mouseY,0,0, random(50,150)));
+  
 }
