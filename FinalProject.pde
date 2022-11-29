@@ -108,6 +108,10 @@ void setup() {
   for (int i = 0; i < 4; i++) cells.add(new Cell(random(0, width), random(0,height), random(-1,1), random(-1,1), random(20,30)));
 }
 
+
+// Whether or not to draw lines
+boolean drawLines = true;
+
 void draw() {
   //background(105,124,18); // Green background
   //background(155,103,60); // Autumn brown background
@@ -115,9 +119,20 @@ void draw() {
   background(255,218,3); // Sunflower yellow
   
   // Draw cells
-  for (Cell i: cells) {
-    i.spawnCell();
-    i.moveCell();
+  //for (Cell i: cells) {
+  //  i.spawnCell();
+  //  i.moveCell();
+  //}
+  
+  // Draw cells with connecting lines
+  for (int i = 0; i < cells.size(); i++) {
+    Cell a = cells.get(i);
+    if (i+1 != cells.size() && drawLines) {
+      line(cells.get(i).pos.x,cells.get(i).pos.y,cells.get(i+1).pos.x,cells.get(i+1).pos.y);
+      stroke(a.col[0],a.col[1],a.col[2]);
+    }
+    a.spawnCell();
+    a.moveCell();
   }
   
 }
@@ -133,12 +148,23 @@ void keyPressed() {
       cells.add(new Cell(j.pos.x, j.pos.y, random(-1,1)*j.movement.x, random(-1,1)*j.movement.y, j.size / 1.5));
     }
   }
-  
   // R is pressed
   // Delete all cells and reinput starting cells
   if (keyCode == 82) {
     cells.clear();
+    avoidSpots.clear();
     for (int i = 0; i < 4; i++) cells.add(new Cell(random(0, width), random(0,height), random(-1,1), random(-1,1), random(20,30)));
+  }
+  // L is pressed
+  // Draw lines or don't
+  if (keyCode == 76) {
+    drawLines = !drawLines;
+  }
+  // Backspace is pressed
+  // Remove all "duplicates"
+  if (keyCode == 8 && cells.size() > 1) {
+    int x = cells.size();
+    for (int i = x-1; i >= x/2; i--) cells.remove(i);
   }
 }
 
