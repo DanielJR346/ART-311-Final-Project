@@ -28,12 +28,14 @@ class Cell {
   }
 
   // Constructor with color
-  Cell(float posX, float posY, float moveX, float moveY, float cellSize, int colR, int colG, int colB) {
+  Cell(float posX, float posY, float moveX, float moveY, float cellSize, float colR, float colG, float colB) {
     pos.x = posX;
     pos.y = posY;
     movement.x = moveX;
     movement.y = moveY;
     size = cellSize;
+    //if (colR == 255 && colG == 255 && colB == 255) setCol(255,255,255); // no colr variation if white is chosen
+    //else setCol(random(colR-20, colR+20),random(colG-20, colG+20),random(colB-20,colB+20));
     setCol(colR,colG,colB);
   }
   
@@ -49,10 +51,10 @@ class Cell {
   }
   
   // Setter for color
-  void setCol(int x, int y, int z) {
-    col[0] = x;
-    col[1] = y;
-    col[2] = z;
+  void setCol(float x, float y, float z) {
+    col[0] = random(x-20,x+20);
+    col[1] = random(y-20,y+20);
+    col[2] = random(z-20,z+20);
   }
   
   // Draw method for cell
@@ -124,6 +126,8 @@ ArrayList<Cell> cells = new ArrayList<Cell>();
 ArrayList<Cell> avoidSpots = new ArrayList<Cell>();
 // ArrayList for iteration 1
 ArrayList<Cell> it1 = new ArrayList<Cell>();
+// ArrayList for leaves
+ArrayList<Cell> leaves = new ArrayList<Cell>();
 
 void setup() {
   size(1200,1000);
@@ -134,6 +138,8 @@ void setup() {
   for (int i = 0; i < 4; i++) cells.add(new Cell(random(0, width), random(0,height), random(-2,2), random(-2,2), random(20,30)));
   // Set up for it1
   it1.add(new Cell( width/2, height/2, 4,4,30,255,255,255));
+  // Set up for leaves
+  for (int i = 0; i < 10; i++) leaves.add(new Cell(random(0, width), random(0,height), random(-2,2), random(-2,2), random(20,30)));
 }
 
 // Draw line from cell to avoid spot if close enough
@@ -153,6 +159,18 @@ void line(ArrayList<Cell> list1, ArrayList<Cell> list2) {
 boolean drawLines = false;
 // Will determine which iteration of the project is being depicted
 int progress = 1;
+// different color leaf occurrence (closer to 1 means more likely)
+int redLeaf = 12;
+int yellowLeaf = 11;
+int orangeLeaf = 5;
+// Background RGBs for leaves
+float leavesR = 255;
+float leavesG = 218;
+float leavesB = 3;
+// Increment leaves backgroud to turn yellow to brown
+float incR = (128-255)/16;
+float incG = (9-218)/16;
+float incB = (32-3)/16;
 
 void draw() {
   //background(105,124,18); // Green background
@@ -194,12 +212,26 @@ void draw() {
     }
   }
   
+  else if (progress == 3) {
+    background(leavesR, leavesG, leavesB); // Sunflower yellow
+    // Draw cells with connecting lines
+    for (int i = 0; i < leaves.size(); i++) {
+      Cell a = leaves.get(i);
+      a.spawnCell();
+      a.repel(mouseX,mouseY, 100);
+      a.repel(avoidSpots);
+      a.moveCell();
+    }
+    
+  }
+  
 }
 
 void keyPressed() {
   println("keyCode == " + keyCode);
   // Spacebar pressed
   if (keyCode == 32) {
+    // Duplicate cells with different properties depending on the mode
     println("Duplicated cells!");
     if (progress == 1) {
       // Duplicate every cell in cells
@@ -215,6 +247,33 @@ void keyPressed() {
         it1.add(new Cell(j.pos.x, j.pos.y, -j.movement.x, -j.movement.y, j.size,255,255,255));
       }
     }
+    if (progress == 3) {
+      // Duplicate every leaf in leaves
+      // Make variant color leaves more common
+      if (redLeaf >5)redLeaf-=1;
+      if (orangeLeaf > 3)orangeLeaf-=1;
+      if (yellowLeaf > 4)yellowLeaf-=1;
+      for (int i = leaves.size()-1; i >= 0; i--) {
+        Cell j = leaves.get(i);
+        // Change leaf colors of old leaves if conditions apply
+        if (i%redLeaf == 0) j.setCol(127,40,43);
+        else if (i%yellowLeaf == 0) j.setCol(214,156,18);
+        else if (i%orangeLeaf == 0) j.setCol(222,89,28);
+        
+        // Add variation of leaf color for new leaves
+        if (i%redLeaf == 0) leaves.add(new Cell(j.pos.x, j.pos.y, random(-1,1)*j.movement.x, random(-1,1)*j.movement.y, j.size / 1.5, 127, 40, 43)); // Red
+        else if (i%yellowLeaf == 0) leaves.add(new Cell(j.pos.x, j.pos.y, random(-1,1)*j.movement.x, random(-1,1)*j.movement.y, j.size / 1.5, 214,156,18)); // Yellow
+        else if (i%orangeLeaf == 0) leaves.add(new Cell(j.pos.x, j.pos.y, random(-1,1)*j.movement.x, random(-1,1)*j.movement.y, j.size / 1.5, 222,89,28)); // Orange
+        leaves.add(new Cell(j.pos.x, j.pos.y, random(-1,1)*j.movement.x, random(-1,1)*j.movement.y, j.size / 1.5));
+        
+      }
+      println("redLeaf: " + redLeaf + " orangeLeaf: " + orangeLeaf + " yellowLeaf: " + yellowLeaf);
+      // Progress background color
+      leavesR += incR;
+      leavesG += incG;
+      leavesB += incB;
+
+    }
   }
   // R is pressed
   // Delete all cells and reinput starting cells
@@ -222,10 +281,15 @@ void keyPressed() {
     drawLines = false;
     cells.clear();
     it1.clear();
+    leaves.clear();
     avoidSpots.clear();
     for (int i = 0; i < 4; i++) cells.add(new Cell(random(0, width), random(0,height), random(-1,1), random(-1,1), random(20,30)));
     it1.add(new Cell( width/2, height/2, 4,4,30));
     it1.get(0).setCol(255,255,255);
+    for (int i = 0; i < 10; i++) leaves.add(new Cell(random(0, width), random(0,height), random(-2,2), random(-2,2), random(20,30)));
+    leavesR = 255;
+    leavesG = 218;
+    leavesB = 3;
     
   }
   // L is pressed
@@ -235,9 +299,27 @@ void keyPressed() {
   }
   // Backspace is pressed
   // Remove all "duplicates"
-  if (keyCode == 8 && cells.size() > 1) {
-    int x = cells.size();
-    for (int i = x-1; i >= x/2; i--) cells.remove(i);
+  if (keyCode == 8) {
+    // Remove duiplicate cells 
+    if (progress == 1 && cells.size() >1) {
+      int x = cells.size();
+      for (int i = x-1; i >= x/2; i--) cells.remove(i);
+    }
+    // Remove duplicate leaves and revert color changes
+    if (progress == 3 && leaves.size() >1) {
+      if (redLeaf < 12) redLeaf++;
+      if (orangeLeaf < 5) orangeLeaf++;
+      if (yellowLeaf < 11) yellowLeaf++;
+      int x = leaves.size();
+      for (int i = x-1; i >= x/2; i--) {
+        leaves.remove(i);
+      }
+      // Revert
+      leavesR -= incR;
+      leavesG -= incG;
+      leavesB -= incB;
+      
+    }
   }
   // P is pressed
   // Remove all avoid spots
@@ -253,6 +335,12 @@ void keyPressed() {
   // 2 key pressed
   if (keyCode == 50) {
     progress = 2;
+    noStroke();
+  }
+  // 3 key pressed
+  if (keyCode == 51) {
+    progress = 3;
+    noStroke();
   }
   
   
