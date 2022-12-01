@@ -6,3 +6,6 @@
 <br /> R: Will clear all cells and avoid spots from the canvas and restart with the initial cells
 <br /> Backspace: Will Thanos snap cell count
 <br /> L: Will toggle lines
+<br /> 1: Switch to current final iteration
+<br /> 2: Switch to previous iteration (avoid spots will not work in this mode!!)
+<br /> P: Erases all avoid spots
